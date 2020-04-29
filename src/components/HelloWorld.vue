@@ -1,58 +1,114 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+  <v-layout column justify-center align-center>
+    <v-flex class="w-100">
+      <v-toolbar color="white" light>Etiquetas</v-toolbar>
+      <v-list>
+        <v-list-item>
+          <v-text-field v-model="newTag" v-on:keyup.enter="submit" placeholder="Añadir etiqueta"></v-text-field>
+        </v-list-item>
+        <v-list-item v-for="tag in tags.slice().reverse()" :key="tag._id">
+          <v-list-item-icon>
+            <v-icon :style="dynamicStyle(tag.randomColor)" dense>mdi-circle-medium</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content
+          >{{tag.name}}</v-list-item-content>
+          <v-list-item-action>
+            <v-btn
+              text
+              dense
+              small
+              v-on:click="showInput(tag)"
+              class="text-transform-none"
+            >Editar</v-btn>
+          </v-list-item-action>
+          <v-list-item-action>
+            <v-btn text dense small v-on:click="remove(tag._id)" class="text-transform-none">Borrar</v-btn>
+          </v-list-item-action>
+        </v-list-item>
+        <v-list-item v-if="editing">
+          <v-text-field v-model="newName" v-on:keyup.enter="update(curr._id, curr.randomColor)" placeholder="Nuevo nombre"></v-text-field>
+        </v-list-item>
+      </v-list>
+    </v-flex>
+  </v-layout>
 </template>
 
 <script>
+import { mapState } from "vuex";
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  data: () => ({
+    //
+    editing: false,
+    newName: "",
+    newTag: "",
+    curr: {}
+  }),
+  name: "index",
+  head: {
+    title: "Prueba Valiu"
+  },
+  computed: {
+    ...mapState(["tags"])
+  },
+  methods: {
+    showInput(tag){
+      this.editing = true;
+      this.curr = tag;
+    },
+    dynamicStyle(randomColor) {
+      return {
+        color: randomColor
+      };
+    },
+    submit() {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      let message = {
+        action: "create",
+        data: [
+          {
+            randomColor: color,
+            name: this.newTag
+          }
+        ]
+      };
+      this.$socket.emit("message", JSON.stringify(message));
+      this.newTag = "";
+    },
+    update(_id, randomColor) {
+      let message = {
+        action: "update",
+        data: [
+          {
+            _id,
+            name: this.newName,
+            randomColor
+          }
+        ]
+      };
+      this.$socket.emit("message", JSON.stringify(message));
+      this.newName = "";
+      this.editing = false;
+    },
+    remove(_id) {
+      let message = {
+        action: "delete",
+        data: [
+          {
+            _id
+          }
+        ]
+      };
+      this.$socket.emit("message", JSON.stringify(message));
+    }
   }
-}
+};
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+.w-100 {
+  width: 100%;
 }
 </style>
