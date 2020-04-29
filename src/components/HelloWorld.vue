@@ -4,29 +4,29 @@
       <v-toolbar color="white" light>Etiquetas</v-toolbar>
       <v-list>
         <v-list-item>
-          <v-text-field v-model="newTag" v-on:keyup.enter="submit" placeholder="Añadir etiqueta"></v-text-field>
+          <v-text-field v-model="newTag" v-on:keyup.enter="submit" placeholder="Añadir etiqueta" solo flat hide-details></v-text-field>
         </v-list-item>
         <v-list-item v-for="tag in tags.slice().reverse()" :key="tag._id">
           <v-list-item-icon>
             <v-icon :style="dynamicStyle(tag.randomColor)" dense>mdi-circle-medium</v-icon>
           </v-list-item-icon>
-          <v-list-item-content
+          <v-list-item-content v-show="!tag.editing"
           >{{tag.name}}</v-list-item-content>
+          <v-list-item-content v-show="tag.editing">
+            <v-text-field v-model="tag.name" v-on:keyup.enter="update(tag._id, tag.name, tag.randomColor)" placeholder="Nuevo nombre" dense></v-text-field>
+          </v-list-item-content>
           <v-list-item-action>
             <v-btn
               text
               dense
               small
-              v-on:click="showInput(tag)"
+              v-on:click="setEditing(tag)"
               class="text-transform-none"
             >Editar</v-btn>
           </v-list-item-action>
           <v-list-item-action>
             <v-btn text dense small v-on:click="remove(tag._id)" class="text-transform-none">Borrar</v-btn>
           </v-list-item-action>
-        </v-list-item>
-        <v-list-item v-if="editing">
-          <v-text-field v-model="newName" v-on:keyup.enter="update(curr._id, curr.randomColor)" placeholder="Nuevo nombre"></v-text-field>
         </v-list-item>
       </v-list>
     </v-flex>
@@ -37,11 +37,7 @@
 import { mapState } from "vuex";
 export default {
   data: () => ({
-    //
-    editing: false,
-    newName: "",
-    newTag: "",
-    curr: {}
+    newTag: ""
   }),
   name: "index",
   head: {
@@ -51,9 +47,10 @@ export default {
     ...mapState(["tags"])
   },
   methods: {
-    showInput(tag){
-      this.editing = true;
-      this.curr = tag;
+    setEditing(tag) {
+      //this.tags..
+      this.$store.commit('UPDATE_EDITING', tag);
+      //this.$forceUpdate();
     },
     dynamicStyle(randomColor) {
       return {
@@ -78,20 +75,18 @@ export default {
       this.$socket.emit("message", JSON.stringify(message));
       this.newTag = "";
     },
-    update(_id, randomColor) {
+    update(_id, name, randomColor) {
       let message = {
         action: "update",
         data: [
           {
             _id,
-            name: this.newName,
+            name,
             randomColor
           }
         ]
       };
       this.$socket.emit("message", JSON.stringify(message));
-      this.newName = "";
-      this.editing = false;
     },
     remove(_id) {
       let message = {

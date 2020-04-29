@@ -30,6 +30,10 @@ export default new Vuex.Store({
     SOCKET_list(state,message) {
       console.log(message);
       state.tags= JSON.parse(message).data;
+      state.tags = state.tags.map(tag => {
+        tag.editing = false;
+        return tag;
+      });
     },
 
     SOCKET_update(state, message) {
@@ -52,8 +56,18 @@ export default new Vuex.Store({
     SOCKET_create(state, message) {
       console.log(message);
       let data = JSON.parse(message).data;
+      data[0].editing = false;
       state.tags.push(data[0]);
     },
+
+    UPDATE_EDITING(state, tag) {
+      state.tags = state.tags.map(updateTag => {
+        if(tag === updateTag) {
+          updateTag.editing = !updateTag.editing;
+        }
+        return updateTag;
+      })
+    }
 
   }
 })

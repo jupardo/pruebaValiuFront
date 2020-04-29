@@ -9,7 +9,7 @@ Vue.config.productionTip = false
 
 //Vue.use(VueSocketio, `//${window.location.host}`, MyVuexStore);
 Vue.use(new VueSocketio({
-  connection: 'http://localhost:3000',
+  connection: "https://jupardo.com:8000",
   vuex: {
     store,
     actionPrefix: 'SOCKET_',
